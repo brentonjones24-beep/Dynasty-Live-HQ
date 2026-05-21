@@ -279,7 +279,12 @@ export default function App() {
               </div>
               <div>
                 <label className="block text-[12px] font-semibold tracking-wide mb-1.5 uppercase" style={{ color: "rgba(255,255,255,0.3)" }}>Number of Teams</label>
-                <input type="number" value={teams} onChange={e => setTeams(e.target.value)} placeholder="e.g. 10" min="2" max="20" style={inputStyle} />
+                <select value={teams} onChange={e => setTeams(e.target.value)} style={{ ...inputStyle, cursor: "pointer" }}>
+                  <option value="" style={{ background: "#1a1a1a" }}>Select…</option>
+                  {[8, 10, 12, 14, 16].map(n => (
+                    <option key={n} value={n} style={{ background: "#1a1a1a" }}>{n} teams</option>
+                  ))}
+                </select>
               </div>
               <div className="pt-2">
                 <button type="submit" disabled={wlStatus === "loading"}
