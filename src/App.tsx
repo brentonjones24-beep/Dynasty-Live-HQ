@@ -337,16 +337,16 @@ export default function App() {
                 The home of serious AFL dynasty leagues
               </span>
             </div>
-            <h1 className="text-[50px] md:text-[72px] leading-[0.98] font-black tracking-[-0.025em] text-white mb-5">
-              Your League<br />
-              Deserves Better<br />
-              <span style={{ color: GOLD }}>Than a Spreadsheet.</span>
+            <h1 className="text-[56px] md:text-[80px] leading-[0.95] font-black tracking-[-0.03em] text-white mb-6">
+              Built for the<br />
+              <span style={{ color: GOLD }}>Long Game.</span>
             </h1>
             <p className="text-[16px] md:text-[18px] leading-[1.8] max-w-[500px] mb-10"
               style={{ color: "rgba(255,255,255,0.46)", fontWeight: 300 }}>
-              Dynasty Live HQ is the complete platform for AFL dynasty and keeper leagues — real squads,
-              real positions, your rules. Live scoring, trades, auctions, drafts, and a media hub your
-              coaches will actually read. On your own domain, with an app on every phone.
+              Your league deserves better than a spreadsheet. Dynasty Live HQ is the complete platform
+              for AFL dynasty and keeper leagues — real squads, real positions, your rules. Live scoring,
+              trades, auctions, drafts, and a media hub your coaches will actually read. On your own
+              domain, with an app on every phone.
             </p>
             <div className="flex flex-wrap items-center gap-3 mb-12">
               <a href="#waitlist"
