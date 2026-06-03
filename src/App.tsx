@@ -10,7 +10,7 @@ const FEATURES = [
   {
     icon: "⚡",
     title: "Live Match Centre",
-    body: "Real-time player scores updated as games progress. Confirmed team selections shown with green dots before bounce, and automatic late-out substitutions keep your score accurate without lifting a finger.",
+    body: "Real-time player scores updated as games progress. Head-to-head match scoring with full player breakdowns — every point accounted for, round by round.",
   },
   {
     icon: "🔄",
@@ -46,6 +46,16 @@ const FEATURES = [
     icon: "📱",
     title: "Mobile App",
     body: "Install directly to your home screen on iPhone or Android — no App Store required. Push notifications for trades, auctions, and match events keep you in the loop all season.",
+  },
+  {
+    icon: "🏈",
+    title: "Real Squads. Real Positions.",
+    body: "Your roster mirrors a real AFL list — primary and rookie designations, position-locked lineups (DEF, MID, RUC, FWD, KPD, KPF), and a bench structure that matches how the game is actually played.",
+  },
+  {
+    icon: "⚙️",
+    title: "Customisable Rules",
+    body: "Bench size, scoring format, trade rules, draft structure — configure your league the way you've always run it. Dynasty Live HQ flexes to your rules, not the other way around.",
   },
   {
     icon: "🌐",
@@ -324,18 +334,19 @@ export default function App() {
             <div className="flex items-center gap-3 mb-8">
               <div className="h-px w-10 flex-shrink-0" style={{ background: GOLD_MUTED }} />
               <span className="text-[11px] font-semibold tracking-[0.24em] uppercase" style={{ color: GOLD_MUTED }}>
-                Built for competitive AFL dynasty leagues
+                The home of serious AFL dynasty leagues
               </span>
             </div>
             <h1 className="text-[50px] md:text-[72px] leading-[0.98] font-black tracking-[-0.025em] text-white mb-5">
-              Run Your League<br />
-              <span style={{ color: GOLD }}>Properly.</span>
+              Your League<br />
+              Deserves Better<br />
+              <span style={{ color: GOLD }}>Than a Spreadsheet.</span>
             </h1>
             <p className="text-[16px] md:text-[18px] leading-[1.8] max-w-[500px] mb-10"
               style={{ color: "rgba(255,255,255,0.46)", fontWeight: 300 }}>
-              The complete platform for dynasty and keeper AFL leagues — live scoring, trades, auctions, drafts,
-              and real-time league management. On your own custom domain, with a mobile app your coaches
-              will actually use.
+              Dynasty Live HQ is the complete platform for AFL dynasty and keeper leagues — real squads,
+              real positions, your rules. Live scoring, trades, auctions, drafts, and a media hub your
+              coaches will actually read. On your own domain, with an app on every phone.
             </p>
             <div className="flex flex-wrap items-center gap-3 mb-12">
               <a href="#waitlist"
@@ -351,11 +362,11 @@ export default function App() {
             </div>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-10 gap-y-3">
               {[
-                "Live scoring & automatic late-outs",
+                "Live scoring & head-to-head match centre",
                 "Trade centre with full negotiation",
                 "Auction room & draft hub",
                 "Stats history & trade log",
-                "Custom media hub & masthead",
+                "Real squads, real positions & custom rules",
                 "Mobile app & custom domain",
               ].map((f, i) => (
                 <div key={i} className="flex items-start gap-2.5">
@@ -381,9 +392,9 @@ export default function App() {
             <h2 className="text-[36px] md:text-[48px] font-black tracking-tight text-white mb-4">
               Built for serious leagues
             </h2>
-            <p className="text-[16px] max-w-[500px] mx-auto" style={{ color: "rgba(255,255,255,0.4)", lineHeight: 1.8 }}>
-              Every feature your dynasty league needs — from selection night to the grand final.
-              No spreadsheets. No group chats. One platform.
+            <p className="text-[16px] max-w-[520px] mx-auto" style={{ color: "rgba(255,255,255,0.4)", lineHeight: 1.8 }}>
+              Real AFL squads. Real position rules. Your format, your scoring, your domain.
+              Everything your league needs from selection night to the grand final — no spreadsheets, no group chats.
             </p>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
