@@ -65,7 +65,7 @@ const FEATURES = [
 ];
 
 const HOW_IT_WORKS = [
-  { step: "01", title: "Register your league", body: "Tell us your league name, number of teams, and format. We handle the full setup — rosters, fixtures, scoring, and your media hub." },
+  { step: "01", title: "Register your league", body: "Tell us your league name, number of teams, and format. Already running a league elsewhere? Import your full roster with a CSV and we'll migrate everything — history and all." },
   { step: "02", title: "Invite your coaches", body: "Each coach gets their own login and team dashboard. Rosters, lineups, bids, and trades are locked to their account with role-based permissions." },
   { step: "03", title: "Run your season", body: "Live scores, trades, auctions, draft, media, and stats — all in one platform, all season long. Runs beautifully on mobile and desktop." },
 ];
@@ -604,10 +604,17 @@ export default function App() {
         <div className="mx-auto max-w-lg text-center">
           <SectionEyebrow text="Early access" />
           <h2 className="text-[36px] md:text-[48px] font-black tracking-tight text-white mb-4">Get early access</h2>
-          <p className="text-[15px] mb-10" style={{ color: "rgba(255,255,255,0.4)", lineHeight: 1.8 }}>
+          <p className="text-[15px] mb-4" style={{ color: "rgba(255,255,255,0.4)", lineHeight: 1.8 }}>
             Dynasty Live HQ launches for the 2027 AFL season. Register your league now and we'll
             be in touch before general release — including an early-access discount.
           </p>
+          <div className="flex items-center gap-3 mb-10 justify-center">
+            <div style={{ height: 1, width: 32, background: "rgba(201,168,76,0.3)" }} />
+            <span className="text-[13px]" style={{ color: "rgba(201,168,76,0.7)" }}>
+              Already running a league? Full CSV import — your rosters move with you.
+            </span>
+            <div style={{ height: 1, width: 32, background: "rgba(201,168,76,0.3)" }} />
+          </div>
           {wlStatus === "success" ? (
             <div className="rounded-xl p-8" style={{ background: "rgba(201,168,76,0.08)", border: "1px solid rgba(201,168,76,0.2)" }}>
               <div className="text-2xl mb-3">✓</div>
