@@ -449,9 +449,9 @@ export default function App() {
             </div>
             <div style={{ display: "flex", justifyContent: "center", gap: 24, flexWrap: "wrap" }}>
               <PhoneFrame src="/Best_22_Mobile.png" alt="Best 22 — mobile" />
-              <PhoneFrame alt="Match Centre — mobile" />
-              <PhoneFrame alt="Trade Centre — mobile" />
-              <PhoneFrame alt="Auction Room — mobile" />
+              <PhoneFrame src="/Match_Centre_Mobile.jpg" alt="Match Centre — mobile" />
+              <PhoneFrame src="/Trade_Centre_Mobile.jpg" alt="Trade Centre — mobile" />
+              <PhoneFrame src="/Auction_Room_Mobile.jpg" alt="Auction Room — mobile" />
             </div>
             <p style={{ textAlign: "center", fontSize: 12, color: "rgba(255,255,255,0.18)", marginTop: 28, lineHeight: 1.8 }}>
               Works on iPhone and Android. Install via the browser — no App Store required.
