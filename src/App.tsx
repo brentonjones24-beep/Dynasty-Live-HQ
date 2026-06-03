@@ -429,8 +429,7 @@ export default function App() {
               Desktop — Match Centre &amp; Live Scoring
             </div>
             <div className="flex justify-center">
-              {/* Replace the src prop with a real screenshot path, e.g. src="/screenshots/match-centre.png" */}
-              <DesktopFrame alt="Match Centre — desktop screenshot" />
+              <DesktopFrame src="/Match_Centre_Desktop.png" alt="Match Centre — live scoring" />
             </div>
           </div>
 
@@ -439,7 +438,7 @@ export default function App() {
               Desktop — Trade Centre
             </div>
             <div className="flex justify-center">
-              <DesktopFrame alt="Trade Centre — desktop screenshot" />
+              <DesktopFrame src="/Trade_Centre_Desktop.png" alt="Trade Centre" />
             </div>
           </div>
 
@@ -449,8 +448,7 @@ export default function App() {
               Mobile App — Install to Home Screen
             </div>
             <div style={{ display: "flex", justifyContent: "center", gap: 24, flexWrap: "wrap" }}>
-              {/* Replace the src prop with real screenshot paths, e.g. src="/screenshots/mobile-home.png" */}
-              <PhoneFrame alt="Home — live scores" />
+              <PhoneFrame src="/Best_22_Mobile.png" alt="Best 22 — mobile" />
               <PhoneFrame alt="Match Centre — mobile" />
               <PhoneFrame alt="Trade Centre — mobile" />
               <PhoneFrame alt="Auction Room — mobile" />
