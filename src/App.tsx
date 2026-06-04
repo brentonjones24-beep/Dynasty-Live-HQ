@@ -4,7 +4,7 @@ const GOLD       = "#c9a84c";
 const GOLD_MUTED = "rgba(201,168,76,0.75)";
 const BG         = "#080808";
 
-const NAV_LINKS = ["Features", "Screenshots", "Pricing", "Waitlist"] as const;
+const NAV_LINKS = ["Features", "Screenshots", "Demo", "Pricing", "Waitlist"] as const;
 
 const FEATURES = [
   {
@@ -458,6 +458,76 @@ export default function App() {
               Push notifications for trades, auctions, and match events.
             </p>
           </div>
+        </div>
+      </section>
+
+      {/* ── DEMO LEAGUE ── */}
+      <section id="demo" style={{ padding: "100px 24px", background: "#0d0d0d" }}>
+        <div className="mx-auto max-w-5xl">
+          <div className="text-center mb-14">
+            <SectionEyebrow text="See it live" />
+            <h2 className="text-[36px] md:text-[48px] font-black tracking-tight text-white mb-4">
+              Explore a demo league.
+            </h2>
+            <p className="text-[16px] max-w-[520px] mx-auto" style={{ color: "rgba(255,255,255,0.4)", lineHeight: 1.8 }}>
+              Browse a fully-loaded demo league — ladder, results, media room, classifieds, B&F votes,
+              and league history. No login required.
+            </p>
+          </div>
+
+          <div className="rounded-2xl overflow-hidden" style={{
+            border: "1px solid rgba(255,255,255,0.08)",
+            background: "rgba(255,255,255,0.02)",
+          }}>
+            {/* Demo card header */}
+            <div className="flex items-center justify-between px-8 py-5" style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+              <div>
+                <div style={{ fontSize: 10, fontWeight: 700, letterSpacing: "0.22em", textTransform: "uppercase", color: "rgba(255,255,255,0.25)", marginBottom: 4 }}>
+                  Demo League
+                </div>
+                <div style={{ fontSize: 18, fontWeight: 800, color: "#fff", letterSpacing: "-0.01em" }}>
+                  The Premier Fantasy Football Experience
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div style={{ width: 7, height: 7, borderRadius: "50%", background: "#22c55e" }} />
+                <span style={{ fontSize: 12, fontWeight: 600, color: "rgba(255,255,255,0.35)" }}>Interactive</span>
+              </div>
+            </div>
+
+            {/* Feature highlights */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-y sm:divide-y-0" style={{ borderBottom: "1px solid rgba(255,255,255,0.07)" }}>
+              {[
+                { label: "Teams", value: "10" },
+                { label: "Format", value: "Dynasty" },
+                { label: "Round", value: "13 of 16" },
+                { label: "Views", value: "5 tabs" },
+              ].map(item => (
+                <div key={item.label} className="px-6 py-5 text-center" style={{ borderColor: "rgba(255,255,255,0.07)" }}>
+                  <div style={{ fontSize: 20, fontWeight: 900, color: "#fff", letterSpacing: "-0.02em" }}>{item.value}</div>
+                  <div style={{ fontSize: 11, color: "rgba(255,255,255,0.28)", marginTop: 2, fontWeight: 600, letterSpacing: "0.08em", textTransform: "uppercase" }}>{item.label}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* CTA row */}
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-8 py-6">
+              <p style={{ fontSize: 13, color: "rgba(255,255,255,0.35)", lineHeight: 1.7, maxWidth: 420 }}>
+                Ladder, results, media room, classifieds, B&F leaderboard, and league history — click around and see what your league would look like.
+              </p>
+              <a
+                href="/demo"
+                className="flex-shrink-0 px-7 py-3 rounded text-[14px] font-semibold tracking-wide transition-all hover:brightness-108 active:scale-[0.975]"
+                style={{ background: GOLD, color: "#0a0a0a", textDecoration: "none" }}
+              >
+                View Demo League →
+              </a>
+            </div>
+          </div>
+
+          <p style={{ textAlign: "center", fontSize: 12, color: "rgba(255,255,255,0.18)", marginTop: 24, lineHeight: 1.8 }}>
+            Running your league elsewhere? We'll migrate your full roster history via CSV — nothing gets left behind.
+          </p>
         </div>
       </section>
 
