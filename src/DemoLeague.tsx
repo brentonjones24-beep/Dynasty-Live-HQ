@@ -145,9 +145,21 @@ Players confirmed as late outs before match commencement are replaced by the nom
 **Conduct**
 All members are expected to conduct themselves with respect. Sledging is encouraged; abuse is not. The Commissioner reserves the right to remove any member who brings the competition into disrepute. This is a dynasty competition — we're here for the long haul.`;
 
+// ─── TYPES ───────────────────────────────────────────────────────────────────
+
+type Article = {
+  id: number;
+  type: string;
+  title: string;
+  author: string;
+  date: string;
+  body: string;
+  comments: { author: string; text: string }[];
+};
+
 // ─── COMPONENTS ──────────────────────────────────────────────────────────────
 
-const typeColors = {
+const typeColors: Record<string, string> = {
   NEWS: "#e8b84b",
   ANALYSIS: "#5b9cf6",
   RECAP: "#6bcb77",
@@ -156,7 +168,7 @@ const typeColors = {
   "TRADE IDEA": "#a78bfa",
 };
 
-function Badge({ type }) {
+function Badge({ type }: { type: string }) {
   return (
     <span style={{
       background: typeColors[type] || "#888",
@@ -255,7 +267,7 @@ function Results() {
   );
 }
 
-function ArticleCard({ article, onClick }) {
+function ArticleCard({ article, onClick }: { article: Article; onClick: () => void }) {
   return (
     <div onClick={onClick} style={{
       background: "#0d1120", border: "1px solid #1a2035", borderRadius: 10,
@@ -274,7 +286,7 @@ function ArticleCard({ article, onClick }) {
   );
 }
 
-function ArticleView({ article, onBack }) {
+function ArticleView({ article, onBack }: { article: Article; onBack: () => void }) {
   return (
     <div>
       <button onClick={onBack} style={{
@@ -287,7 +299,7 @@ function ArticleView({ article, onBack }) {
         <span style={{ fontSize: "0.72rem", color: "#5b7199" }}>{article.date} · By {article.author}</span>
       </div>
       <h2 style={{ margin: "0 0 18px", fontSize: "1.2rem", color: "#e8eaf0", lineHeight: 1.4 }}>{article.title}</h2>
-      {article.body.split("\n\n").map((p, i) => (
+      {article.body.split("\n\n").map((p: string, i: number) => (
         <p key={i} style={{ color: "#9ca3af", fontSize: "0.85rem", lineHeight: 1.75, marginBottom: 14 }}>{p}</p>
       ))}
       <div style={{ marginTop: 28, borderTop: "1px solid #1a2035", paddingTop: 20 }}>
@@ -295,7 +307,7 @@ function ArticleView({ article, onBack }) {
           {article.comments.length} Comments
         </div>
         <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          {article.comments.map((c, i) => (
+          {article.comments.map((c: { author: string; text: string }, i: number) => (
             <div key={i} style={{ background: "#0d1120", borderRadius: 8, padding: "12px 14px", border: "1px solid #1a2035" }}>
               <div style={{ fontWeight: 700, fontSize: "0.75rem", color: "#5b9cf6", marginBottom: 5 }}>{c.author}</div>
               <div style={{ fontSize: "0.82rem", color: "#9ca3af" }}>{c.text}</div>
@@ -308,7 +320,7 @@ function ArticleView({ article, onBack }) {
 }
 
 function MediaRoom() {
-  const [selected, setSelected] = useState(null);
+  const [selected, setSelected] = useState<Article | null>(null);
   if (selected) return <ArticleView article={selected} onBack={() => setSelected(null)} />;
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
