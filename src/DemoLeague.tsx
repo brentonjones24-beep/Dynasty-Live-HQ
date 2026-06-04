@@ -684,12 +684,582 @@ function LeagueHQTab() {
   );
 }
 
+// ─── TRADE DATA ───────────────────────────────────────────────────────────────
+
+type TradeMove = { from: string; to: string; assets: string[] };
+type HistoricalTrade = { id: number; date: string; parties: string[]; moves: TradeMove[]; message?: string };
+
+const TRADE_HISTORY: HistoricalTrade[] = [
+  {
+    id: 1, date: "14 May 2025",
+    parties: ["Dusty's Dirty Dozen", "Danger Danger"],
+    moves: [
+      { from: "Danger Danger",       to: "Dusty's Dirty Dozen", assets: ["P. Dangerfield"] },
+      { from: "Dusty's Dirty Dozen", to: "Danger Danger",       assets: ["2026 R1 Pick (via Dusty's)", "B. Acres"] },
+    ],
+  },
+  {
+    id: 2, date: "2 Apr 2025",
+    parties: ["Grundy's Grunt Squad", "The Mighty Ducks"],
+    moves: [
+      { from: "Grundy's Grunt Squad", to: "The Mighty Ducks",     assets: ["M. Gawn", "2026 R3 Pick (via Grundy's)"] },
+      { from: "The Mighty Ducks",     to: "Grundy's Grunt Squad", assets: ["C. Oliver", "2026 R1 Pick (via Ducks)"] },
+    ],
+    message: "Stoked to finally get this one done. Go Grunt Squad.",
+  },
+  {
+    id: 3, date: "18 Mar 2025",
+    parties: ["Homer's Donut XI", "Ted Lasso United"],
+    moves: [
+      { from: "Homer's Donut XI",   to: "Ted Lasso United", assets: ["L. Neale"] },
+      { from: "Ted Lasso United",   to: "Homer's Donut XI", assets: ["2026 R2 Pick (via Ted Lasso)", "T. Lynch"] },
+    ],
+  },
+  {
+    id: 4, date: "9 Jun 2025",
+    parties: ["Riewoldt's Revenge", "Norm Smith Villains"],
+    moves: [
+      { from: "Riewoldt's Revenge", to: "Norm Smith Villains", assets: ["T. De Goey", "2026 R2 Pick (via Riewoldt's)"] },
+      { from: "Norm Smith Villains", to: "Riewoldt's Revenge", assets: ["2026 R1 Pick (via Norm Smith)"] },
+    ],
+    message: "Rebuilding. Pain.",
+  },
+  {
+    id: 5, date: "21 Feb 2025",
+    parties: ["Steele Magnolias", "The Andre 3000s"],
+    moves: [
+      { from: "Steele Magnolias",  to: "The Andre 3000s", assets: ["T. Membrey"] },
+      { from: "The Andre 3000s",   to: "Steele Magnolias", assets: ["2026 R4 Pick (via Andre 3000s)"] },
+    ],
+  },
+];
+
+const INBOX_TRADE = {
+  from: "Homer's Donut XI",
+  date: "2 hours ago",
+  moves: [
+    { from: "Homer's Donut XI",   to: "Dusty's Dirty Dozen", assets: ["L. Neale", "2026 R2 Pick (via Homer's)"] },
+    { from: "Dusty's Dirty Dozen", to: "Homer's Donut XI",   assets: ["T. Martin"] },
+  ],
+  message: "Mmmm... T. Martin. Homer needs him. Will throw in a 2nd rounder.",
+};
+
+// ─── DRAFT DATA ───────────────────────────────────────────────────────────────
+
+// Worst→best ladder order for pick ordering
+const DRAFT_ORDER = [
+  "Norm Smith Villains", "The Andre 3000s", "Riewoldt's Revenge", "Steele Magnolias",
+  "Ted Lasso United", "Danger Danger", "Homer's Donut XI", "Grundy's Grunt Squad",
+  "The Mighty Ducks", "Dusty's Dirty Dozen",
+];
+
+type DraftPick = { label: string; round: number; originalOwner: string; currentOwner: string };
+
+function genPicks(): DraftPick[] {
+  const short: Record<string, string> = {
+    "Dusty's Dirty Dozen": "Dusty's", "The Mighty Ducks": "Ducks",
+    "Grundy's Grunt Squad": "Grundy's", "Homer's Donut XI": "Homer's",
+    "Danger Danger": "Danger", "Ted Lasso United": "Ted Lasso",
+    "Steele Magnolias": "Steele", "Riewoldt's Revenge": "Riewoldt's",
+    "The Andre 3000s": "Andre 3000s", "Norm Smith Villains": "Norm Smith",
+  };
+  const picks: DraftPick[] = [];
+  for (let r = 1; r <= 5; r++) {
+    const order = r % 2 === 1 ? DRAFT_ORDER : [...DRAFT_ORDER].reverse();
+    order.forEach((team, i) => {
+      picks.push({ label: `2026 R${r}.${String(i + 1).padStart(2, "0")} (${short[team]})`, round: r, originalOwner: team, currentOwner: team });
+    });
+  }
+  // Apply some trades
+  const traded: [string, string][] = [
+    ["2026 R1.10 (Dusty's)", "Danger Danger"],
+    ["2026 R1.09 (Ducks)",   "Grundy's Grunt Squad"],
+    ["2026 R2.01 (Dusty's)", "Homer's Donut XI"],
+    ["2026 R1.10 (Norm Smith)", "Riewoldt's Revenge"],
+    ["2026 R2.10 (Norm Smith)", "Riewoldt's Revenge"],
+    ["2026 R3.02 (Andre 3000s)", "Steele Magnolias"],
+  ];
+  for (const [label, newOwner] of traded) {
+    const p = picks.find(p => p.label === label);
+    if (p) p.currentOwner = newOwner;
+  }
+  return picks;
+}
+
+const ALL_PICKS = genPicks();
+
+type FreeAgent = { name: string; club: string; positions: string[]; avg: number; gp: number };
+
+const FREE_AGENTS: FreeAgent[] = [
+  { name: "T. Taranto",      club: "Greater Western Sydney", positions: ["MID"],        avg: 107, gp: 13 },
+  { name: "J. Dunkley",      club: "Brisbane Lions",         positions: ["MID"],        avg: 102, gp: 12 },
+  { name: "L. Shiels",       club: "Hawthorn",               positions: ["MID"],        avg: 98,  gp: 13 },
+  { name: "J. Worpel",       club: "Hawthorn",               positions: ["MID"],        avg: 94,  gp: 11 },
+  { name: "C. Petracca",     club: "Melbourne",              positions: ["MID"],        avg: 112, gp: 10 },
+  { name: "N. Daicos",       club: "Collingwood",            positions: ["MID"],        avg: 118, gp: 8  },
+  { name: "S. Flanders",     club: "Collingwood",            positions: ["FWD"],        avg: 86,  gp: 13 },
+  { name: "B. Close",        club: "St Kilda",               positions: ["FWD", "MID"], avg: 91,  gp: 12 },
+  { name: "M. Hinge",        club: "Hawthorn",               positions: ["DEF"],        avg: 82,  gp: 13 },
+  { name: "D. Hewett",       club: "Carlton",                positions: ["MID"],        avg: 96,  gp: 9  },
+  { name: "R. Laird",        club: "Adelaide",               positions: ["DEF"],        avg: 104, gp: 13 },
+  { name: "S. Durham",       club: "Geelong",                positions: ["DEF"],        avg: 79,  gp: 13 },
+  { name: "J. Rankine",      club: "Greater Western Sydney", positions: ["FWD"],        avg: 88,  gp: 11 },
+  { name: "I. Heeney",       club: "Sydney",                 positions: ["FWD", "MID"], avg: 109, gp: 7  },
+  { name: "T. Stengle",      club: "Geelong",                positions: ["FWD"],        avg: 84,  gp: 12 },
+  { name: "B. Frampton",     club: "Port Adelaide",          positions: ["DEF"],        avg: 77,  gp: 13 },
+  { name: "S. Treloar",      club: "Greater Western Sydney", positions: ["MID"],        avg: 91,  gp: 10 },
+  { name: "C. Constable",    club: "Geelong",                positions: ["MID"],        avg: 88,  gp: 12 },
+  { name: "N. Bryan",        club: "Greater Western Sydney", positions: ["RUCK"],       avg: 74,  gp: 10 },
+  { name: "B. Schmidt",      club: "North Melbourne",        positions: ["DEF"],        avg: 72,  gp: 13 },
+  { name: "T. Phillipou",    club: "Richmond",               positions: ["FWD"],        avg: 69,  gp: 13 },
+  { name: "K. Gillbee",      club: "Hawthorn",               positions: ["DEF"],        avg: 81,  gp: 13 },
+];
+
+type RosterPlayer = { name: string; club: string; positions: string[]; avg: number; designation?: "ltil" };
+
+const MY_ROSTER: RosterPlayer[] = [
+  { name: "D. Martin",       club: "Richmond",               positions: ["MID"],        avg: 132 },
+  { name: "P. Lipinski",     club: "Carlton",                positions: ["MID"],        avg: 119 },
+  { name: "P. Dangerfield",  club: "Geelong",                positions: ["MID"],        avg: 127 },
+  { name: "T. Mitchell",     club: "Hawthorn",               positions: ["MID"],        avg: 124 },
+  { name: "C. Mills",        club: "Sydney",                 positions: ["MID"],        avg: 116 },
+  { name: "H. Cunnington",   club: "North Melbourne",        positions: ["MID"],        avg: 108 },
+  { name: "M. Rowell",       club: "Gold Coast",             positions: ["MID"],        avg: 104 },
+  { name: "J. Treloar",      club: "Collingwood",            positions: ["MID"],        avg: 99  },
+  { name: "T. Xerri",        club: "North Melbourne",        positions: ["RUCK"],       avg: 112 },
+  { name: "B. Preuss",       club: "Melbourne",              positions: ["RUCK"],       avg: 88  },
+  { name: "N. Haynes",       club: "Greater Western Sydney", positions: ["DEF"],        avg: 97  },
+  { name: "J. Ridley",       club: "Essendon",               positions: ["DEF"],        avg: 94  },
+  { name: "S. Taylor",       club: "Greater Western Sydney", positions: ["DEF", "KPD"], avg: 91  },
+  { name: "D. Moore",        club: "Collingwood",            positions: ["DEF", "KPD"], avg: 88  },
+  { name: "H. Jones",        club: "North Melbourne",        positions: ["DEF"],        avg: 85  },
+  { name: "T. Doedee",       club: "Adelaide",               positions: ["DEF"],        avg: 79, designation: "ltil" },
+  { name: "J. Cameron",      club: "Greater Western Sydney", positions: ["FWD", "KPF"], avg: 113 },
+  { name: "T. Hawkins",      club: "Geelong",                positions: ["FWD", "KPF"], avg: 96  },
+  { name: "C. Curnow",       club: "Carlton",                positions: ["FWD"],        avg: 108 },
+  { name: "T. Greene",       club: "Greater Western Sydney", positions: ["FWD"],        avg: 99  },
+  { name: "H. Himmelberg",   club: "Greater Western Sydney", positions: ["FWD", "KPF"], avg: 87  },
+  { name: "B. Smith",        club: "Geelong",                positions: ["FWD"],        avg: 91  },
+];
+
+// ─── TRADE CENTRE TAB ─────────────────────────────────────────────────────────
+
+const STATUS_COLOR: Record<string, string> = {
+  accepted: "#16a34a", declined: "#e11d48", pending: "#f59e0b", countered: "#7c3aed",
+};
+
+function TradeMoves({ moves }: { moves: TradeMove[] }) {
+  return (
+    <div style={{ marginBottom: 10 }}>
+      {moves.map((m, i) => (
+        <div key={i} style={{ padding: "8px 10px", background: "#f8fafc", borderRadius: 7, marginBottom: 6 }}>
+          <div style={{ fontSize: 11, fontWeight: 700, color: "#475569", marginBottom: 5 }}>
+            {m.from} → {m.to}
+          </div>
+          {m.assets.map((a, j) => (
+            <div key={j} style={{ fontSize: 13, color: "#1e293b", marginBottom: 2 }}>
+              {a.includes("Pick") ? `🎯 ${a}` : `👤 ${a}`}
+            </div>
+          ))}
+        </div>
+      ))}
+    </div>
+  );
+}
+
+function TradeCentreTab() {
+  const [sub, setSub] = useState<"history" | "inbox" | "propose">("history");
+  const [search, setSearch] = useState("");
+  const [teamFilter, setTeamFilter] = useState("");
+  const [inboxState, setInboxState] = useState<"pending" | "accepted" | "declined" | "countered">("pending");
+
+  const filteredHistory = TRADE_HISTORY.filter(t => {
+    if (teamFilter && !t.parties.includes(teamFilter)) return false;
+    if (search) {
+      const q = search.toLowerCase();
+      const allAssets = t.moves.flatMap(m => m.assets).join(" ").toLowerCase();
+      if (!allAssets.includes(q) && !t.parties.join(" ").toLowerCase().includes(q)) return false;
+    }
+    return true;
+  });
+
+  return (
+    <div>
+      {/* Title */}
+      <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 4 }}>
+        <h2 style={{ margin: 0, color: TEXT, fontSize: 20 }}>Trade Centre</h2>
+        <span style={{ background: "#e11d48", color: "#fff", borderRadius: 99, padding: "2px 10px", fontSize: 13, fontWeight: 700 }}>1 new</span>
+      </div>
+
+      {/* Sub-tabs — WSSC style: bottom border, blue active */}
+      <div style={{ display: "flex", borderBottom: "2px solid #1e3a5f", marginBottom: 20, overflowX: "auto" }}>
+        {([["inbox", "Inbox (1)"], ["history", "Trade History"], ["propose", "Propose Trade"]] as const).map(([key, label]) => (
+          <button key={key} onClick={() => setSub(key)} style={{
+            padding: "10px 14px", background: "none", border: "none",
+            borderBottom: sub === key ? `2px solid ${BLUE}` : "2px solid transparent",
+            color: sub === key ? BLUE : DIM,
+            fontWeight: sub === key ? 700 : 500,
+            cursor: "pointer", marginBottom: -2, fontSize: 13,
+            whiteSpace: "nowrap", fontFamily: "inherit",
+          }}>{label}</button>
+        ))}
+      </div>
+
+      {/* ── INBOX ── */}
+      {sub === "inbox" && (
+        <div>
+          {inboxState === "pending" && (
+            <div style={{ border: "1px solid #e2e8f0", borderLeft: "4px solid #f59e0b", borderRadius: 10, padding: 16, background: "#fff", boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+                <div style={{ fontWeight: 700, fontSize: 15, color: "#1e293b" }}>From: {INBOX_TRADE.from}</div>
+                <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 99, background: "#f59e0b22", color: "#f59e0b" }}>PENDING</span>
+              </div>
+              <TradeMoves moves={INBOX_TRADE.moves} />
+              <div style={{ fontSize: 13, fontStyle: "italic", background: "#f8fafc", color: "#475569", borderRadius: 6, padding: "6px 10px", marginBottom: 12 }}>
+                &ldquo;{INBOX_TRADE.message}&rdquo;
+              </div>
+              <div style={{ fontSize: 11, color: "#94a3b8", marginBottom: 14 }}>{INBOX_TRADE.date}</div>
+              <div style={{ display: "flex", gap: 8 }}>
+                <button onClick={() => setInboxState("accepted")} style={{ background: "#16a34a", color: "#fff", border: "none", borderRadius: 7, padding: "7px 16px", fontWeight: 700, cursor: "pointer", fontSize: 13 }}>Accept</button>
+                <button onClick={() => setInboxState("countered")} style={{ background: "#7c3aed", color: "#fff", border: "none", borderRadius: 7, padding: "7px 16px", fontWeight: 700, cursor: "pointer", fontSize: 13 }}>Counter</button>
+                <button onClick={() => setInboxState("declined")} style={{ background: "#e11d48", color: "#fff", border: "none", borderRadius: 7, padding: "7px 16px", fontWeight: 700, cursor: "pointer", fontSize: 13 }}>Decline</button>
+              </div>
+            </div>
+          )}
+          {inboxState !== "pending" && (
+            <div style={{ border: "1px solid #e2e8f0", borderLeft: `4px solid ${STATUS_COLOR[inboxState]}`, borderRadius: 10, padding: 16, background: "#fff" }}>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: 10 }}>
+                <div style={{ fontWeight: 700, fontSize: 15, color: "#1e293b" }}>From: {INBOX_TRADE.from}</div>
+                <span style={{ fontSize: 11, fontWeight: 700, padding: "3px 9px", borderRadius: 99, background: STATUS_COLOR[inboxState] + "22", color: STATUS_COLOR[inboxState] }}>{inboxState.toUpperCase()}</span>
+              </div>
+              <TradeMoves moves={INBOX_TRADE.moves} />
+              <div style={{ fontSize: 13, color: "#94a3b8" }}>{INBOX_TRADE.date}</div>
+              <button onClick={() => setInboxState("pending")} style={{ marginTop: 12, background: "none", border: "1px solid #e2e8f0", color: "#64748b", borderRadius: 7, padding: "6px 14px", cursor: "pointer", fontSize: 12 }}>Reset demo</button>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* ── HISTORY ── */}
+      {sub === "history" && (
+        <div>
+          <div style={{ display: "flex", gap: 10, marginBottom: 18, flexWrap: "wrap" as const }}>
+            <input
+              placeholder="Search player or pick..."
+              value={search}
+              onChange={e => setSearch(e.target.value)}
+              style={{ flex: 1, minWidth: 160, padding: "7px 12px", borderRadius: 8, border: "1px solid #334155", background: "#1e293b", color: TEXT, fontSize: 13, boxSizing: "border-box" as const }}
+            />
+            <select value={teamFilter} onChange={e => setTeamFilter(e.target.value)}
+              style={{ padding: "7px 12px", borderRadius: 8, border: "1px solid #334155", background: "#1e293b", color: TEXT, fontSize: 13 }}>
+              <option value="">All Teams</option>
+              {TEAMS.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
+            </select>
+            {(search || teamFilter) && (
+              <button onClick={() => { setSearch(""); setTeamFilter(""); }}
+                style={{ padding: "7px 12px", borderRadius: 8, border: "1px solid #334155", background: "#1e293b", fontSize: 13, cursor: "pointer", color: DIM }}>
+                Clear
+              </button>
+            )}
+          </div>
+          <div style={{ fontSize: 13, color: DIM, marginBottom: 12 }}>{filteredHistory.length} trade{filteredHistory.length !== 1 ? "s" : ""}</div>
+          {filteredHistory.length === 0 && (
+            <div style={{ textAlign: "center", color: DIM, padding: 60, fontSize: 15 }}>No trades found</div>
+          )}
+          {filteredHistory.map(trade => (
+            <div key={trade.id} style={{ border: "1px solid #e2e8f0", borderLeft: "4px solid #16a34a", borderRadius: 10, padding: 16, marginBottom: 12, background: "#fff", boxShadow: "0 1px 4px rgba(0,0,0,0.05)" }}>
+              <div style={{ fontWeight: 700, fontSize: 14, color: "#1e293b", marginBottom: 2 }}>
+                {trade.parties.join(" ↔ ")}
+              </div>
+              <div style={{ fontSize: 11, color: "#94a3b8", marginBottom: 10 }}>{trade.date}</div>
+              <TradeMoves moves={trade.moves} />
+              {trade.message && (
+                <div style={{ fontSize: 12, fontStyle: "italic", color: "#64748b", borderRadius: 6, padding: "5px 10px", background: "#f8fafc" }}>
+                  &ldquo;{trade.message}&rdquo;
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* ── PROPOSE ── */}
+      {sub === "propose" && (
+        <div>
+          <div style={{ background: "rgba(37,99,235,0.1)", border: "1px solid rgba(37,99,235,0.25)", borderRadius: 8, padding: "10px 14px", marginBottom: 20, fontSize: 13, color: BLUE_MUT }}>
+            🎮 Demo mode — the propose form is shown for preview only. In the live app coaches can send real trade proposals, counter-offers, and multi-team deals.
+          </div>
+          {/* Teams involved */}
+          <div style={{ marginBottom: 20 }}>
+            <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 8, color: TEXT }}>Teams involved</div>
+            <div style={{ display: "flex", flexWrap: "wrap" as const, gap: 8 }}>
+              {TEAMS.filter(t => t.name !== DEMO_TEAM.name).map(t => (
+                <button key={t.id} style={{
+                  padding: "6px 14px", borderRadius: 99, fontSize: 13, fontWeight: 600,
+                  border: "2px solid #e2e8f0", background: "#fff", color: "#374151", cursor: "not-allowed", opacity: 0.7,
+                }}>{t.name}</button>
+              ))}
+            </div>
+          </div>
+          {/* Asset builder placeholder */}
+          <div style={{ fontWeight: 700, fontSize: 13, marginBottom: 8, color: TEXT }}>Trade assets</div>
+          <div style={{ display: "flex", flexWrap: "wrap" as const, gap: 8, padding: "10px 12px", background: "#f8fafc", borderRadius: 8, border: "1px solid #e2e8f0", marginBottom: 8, opacity: 0.6 }}>
+            <select style={{ padding: "5px 8px", borderRadius: 6, border: "1px solid #cbd5e1", fontSize: 13 }}><option>Player</option></select>
+            <select style={{ padding: "5px 8px", borderRadius: 6, border: "1px solid #cbd5e1", fontSize: 13 }}><option>From…</option></select>
+            <select style={{ padding: "5px 8px", borderRadius: 6, border: "1px solid #cbd5e1", fontSize: 13 }}><option>Select player…</option></select>
+            <select style={{ padding: "5px 8px", borderRadius: 6, border: "1px solid #cbd5e1", fontSize: 13 }}><option>To…</option></select>
+          </div>
+          <button style={{ background: "#f1f5f9", border: "1px dashed #cbd5e1", borderRadius: 8, padding: "8px 16px", fontSize: 13, color: "#475569", width: "100%", marginBottom: 16, cursor: "not-allowed", opacity: 0.6 }}>+ Add player or pick</button>
+          <textarea placeholder="Add a message (optional)..." rows={3} disabled style={{ width: "100%", padding: 10, borderRadius: 8, border: "1px solid #cbd5e1", fontSize: 13, resize: "vertical" as const, marginBottom: 14, boxSizing: "border-box" as const, opacity: 0.6 }} />
+          <button disabled style={{ background: BLUE, color: "#fff", border: "none", borderRadius: 8, padding: "10px 24px", fontWeight: 700, fontSize: 14, opacity: 0.4, cursor: "not-allowed" }}>Send Proposal</button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+// ─── DRAFT HUB TAB ────────────────────────────────────────────────────────────
+
+const POS_COLOR: Record<string, string> = {
+  DEF: "#3b82f6", KPD: "#1d4ed8", MID: "#10b981", RUCK: "#8b5cf6", FWD: "#ef4444", KPF: "#b91c1c",
+};
+
+function DraftHubTab() {
+  const [sub, setSub] = useState<"picks" | "freeagents" | "mylist">("picks");
+  const [year, setYear] = useState(2026);
+  const [teamFilter, setTeamFilter] = useState("");
+  const [faSearch, setFaSearch] = useState("");
+  const [faPosFilter, setFaPosFilter] = useState("ALL");
+
+  const picks = ALL_PICKS; // only 2026 for demo
+  const filtered = teamFilter ? picks.filter(p => p.currentOwner === teamFilter || p.originalOwner === teamFilter) : picks;
+  const byRound = [1, 2, 3, 4, 5].map(r => ({ round: r, picks: filtered.filter(p => p.round === r) }));
+
+  const tradedCount = picks.filter(p => p.originalOwner !== p.currentOwner).length;
+
+  const filteredFa = FREE_AGENTS.filter(p => {
+    if (faPosFilter !== "ALL" && !p.positions.includes(faPosFilter)) return false;
+    if (faSearch) {
+      const q = faSearch.toLowerCase();
+      return p.name.toLowerCase().includes(q) || p.club.toLowerCase().includes(q) || p.positions.join(" ").toLowerCase().includes(q);
+    }
+    return true;
+  }).sort((a, b) => b.avg - a.avg);
+
+  const ltilCount = MY_ROSTER.filter(p => p.designation === "ltil").length;
+
+  return (
+    <div>
+      {/* Sub-tabs */}
+      <div style={{ display: "flex", borderBottom: "2px solid #1e3a5f", marginBottom: 20, overflowX: "auto" }}>
+        {([
+          ["picks", "Draft Picks"],
+          ["freeagents", `Free Agents (${FREE_AGENTS.length})`],
+          ["mylist", `My List (${MY_ROSTER.length}/46${ltilCount > 0 ? ` +${ltilCount} LTI` : ""})`],
+        ] as const).map(([key, label]) => (
+          <button key={key} onClick={() => setSub(key)} style={{
+            padding: "10px 20px", background: "none", border: "none",
+            borderBottom: sub === key ? `2px solid ${BLUE}` : "2px solid transparent",
+            color: sub === key ? BLUE : DIM,
+            fontWeight: sub === key ? 700 : 500,
+            cursor: "pointer", marginBottom: -2, fontSize: 13,
+            whiteSpace: "nowrap", fontFamily: "inherit",
+          }}>{label}</button>
+        ))}
+      </div>
+
+      {/* ── PICKS ── */}
+      {sub === "picks" && (
+        <div>
+          {/* Controls */}
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 20, flexWrap: "wrap" as const }}>
+            <div style={{ display: "flex", border: "1px solid #e2e8f0", borderRadius: 8, overflow: "hidden" }}>
+              {[2026, 2027].map(y => (
+                <button key={y} onClick={() => setYear(y)} style={{ padding: "7px 18px", border: "none", background: year === y ? BLUE : "#fff", color: year === y ? "#fff" : "#374151", fontWeight: year === y ? 700 : 500, cursor: "pointer", fontSize: 13 }}>{y}</button>
+              ))}
+            </div>
+            <select value={teamFilter} onChange={e => setTeamFilter(e.target.value)}
+              style={{ padding: "7px 12px", borderRadius: 8, border: "1px solid #e2e8f0", fontSize: 13, color: "#374151" }}>
+              <option value="">All Teams</option>
+              {TEAMS.map(t => <option key={t.id} value={t.name}>{t.name}</option>)}
+            </select>
+            <div style={{ marginLeft: "auto", fontSize: 13, color: DIM }}>
+              {filtered.length} picks{tradedCount > 0 && !teamFilter ? ` · ${tradedCount} via trade` : ""}
+            </div>
+          </div>
+
+          {year === 2027 && (
+            <div style={{ textAlign: "center", color: DIM, padding: "40px 0", fontSize: 14 }}>
+              2027 picks will populate as the 2026 season progresses and trades are made.
+            </div>
+          )}
+
+          {year === 2026 && (
+            <>
+              {/* Owner summary pills */}
+              {!teamFilter && (
+                <div style={{ display: "flex", flexWrap: "wrap" as const, gap: 8, marginBottom: 24, padding: 14, background: "#f8fafc", borderRadius: 10, border: "1px solid #e2e8f0" }}>
+                  {TEAMS.map(t => {
+                    const count = picks.filter(p => p.currentOwner === t.name).length;
+                    return (
+                      <button key={t.id} onClick={() => setTeamFilter(t.name)} title={`${t.name}: ${count} picks`}
+                        style={{ padding: "4px 10px", borderRadius: 99, border: "1px solid #e2e8f0", background: "#fff", cursor: "pointer", fontSize: 12, fontWeight: 600, display: "flex", alignItems: "center", gap: 5, color: count > 5 ? "#16a34a" : count < 5 ? "#e11d48" : "#374151" }}>
+                        <span>{t.name}</span>
+                        <span style={{ background: count > 5 ? "#dcfce7" : count < 5 ? "#fee2e2" : "#f1f5f9", color: count > 5 ? "#16a34a" : count < 5 ? "#e11d48" : "#374151", borderRadius: 99, padding: "1px 7px", fontWeight: 700, fontSize: 11 }}>{count}</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+              {teamFilter && (
+                <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 18 }}>
+                  <div style={{ fontWeight: 700, fontSize: 15, color: TEXT }}>{teamFilter} — {year} picks ({filtered.length})</div>
+                  <button onClick={() => setTeamFilter("")} style={{ fontSize: 12, color: DIM, background: "none", border: "1px solid #334155", borderRadius: 6, padding: "3px 10px", cursor: "pointer" }}>Clear</button>
+                </div>
+              )}
+              {byRound.map(({ round, picks: rp }) => rp.length === 0 ? null : (
+                <div key={round} style={{ marginBottom: 24 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 10, marginBottom: 10 }}>
+                    <div style={{ fontWeight: 700, fontSize: 13, color: "#fff", background: "#1e293b", padding: "4px 14px", borderRadius: 99 }}>
+                      Round {round}
+                    </div>
+                    <div style={{ flex: 1, height: 1, background: "#e2e8f0" }} />
+                    <div style={{ fontSize: 12, color: DIM }}>{rp.length} pick{rp.length !== 1 ? "s" : ""}</div>
+                  </div>
+                  <div style={{ display: "grid", gridTemplateColumns: "repeat(auto-fill, minmax(130px, 1fr))", gap: 8 }}>
+                    {rp.map((pick, idx) => {
+                      const isTraded = pick.originalOwner !== pick.currentOwner;
+                      return (
+                        <div key={idx} style={{ padding: "10px 12px", borderRadius: 8, border: isTraded ? "1px solid #7c3aed44" : "1px solid #e2e8f0", background: isTraded ? "#f5f3ff" : "#fff", boxShadow: "0 1px 3px rgba(0,0,0,0.04)" }}>
+                          <div style={{ fontWeight: 600, fontSize: 12, color: "#1e293b", marginBottom: 4 }}>{pick.label}</div>
+                          {isTraded ? (
+                            <div style={{ fontSize: 11, display: "flex", alignItems: "center", gap: 4 }}>
+                              <span style={{ background: "#7c3aed", color: "#fff", borderRadius: 99, padding: "1px 6px", fontWeight: 700, fontSize: 10 }}>TRADED</span>
+                              <span style={{ color: "#5b21b6", fontWeight: 600, fontSize: 11 }}>→ {pick.currentOwner.split(" ")[0]}</span>
+                            </div>
+                          ) : (
+                            <div style={{ fontSize: 11, color: "#94a3b8" }}>{pick.currentOwner.split(" ")[0]}</div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+            </>
+          )}
+        </div>
+      )}
+
+      {/* ── FREE AGENTS ── */}
+      {sub === "freeagents" && (
+        <div>
+          <div style={{ display: "flex", gap: 8, marginBottom: 10, flexWrap: "wrap" as const }}>
+            <input
+              type="text" placeholder="Search by name or position..."
+              value={faSearch} onChange={e => setFaSearch(e.target.value)}
+              style={{ flex: 1, minWidth: 160, padding: "8px 12px", borderRadius: 8, border: "1px solid #334155", background: "#1e293b", color: TEXT, fontSize: 13, boxSizing: "border-box" as const }}
+            />
+            <div style={{ display: "flex", gap: 4 }}>
+              {["ALL", "DEF", "KPD", "MID", "RUCK", "FWD", "KPF"].map(pos => (
+                <button key={pos} onClick={() => setFaPosFilter(pos)} style={{
+                  padding: "6px 11px", border: "none", borderRadius: 20, fontSize: 12, cursor: "pointer",
+                  fontWeight: faPosFilter === pos ? 700 : 500,
+                  background: faPosFilter === pos ? BLUE : "#1e293b",
+                  color: faPosFilter === pos ? "#fff" : MUTED,
+                }}>{pos}</button>
+              ))}
+            </div>
+          </div>
+          <div style={{ fontSize: 11, color: DIM, marginBottom: 8 }}>{filteredFa.length} free agent{filteredFa.length !== 1 ? "s" : ""} · sorted by avg score</div>
+          <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "4px 14px", marginBottom: 4 }}>
+            <span style={{ flex: 1, fontSize: 11, color: "#475569", fontWeight: 600, textTransform: "uppercase" as const, letterSpacing: "0.05em" }}>Player</span>
+            <span style={{ width: 50, textAlign: "right" as const, fontSize: 11, color: "#475569", fontWeight: 600, textTransform: "uppercase" as const }}>Avg</span>
+            <span style={{ width: 36, textAlign: "right" as const, fontSize: 11, color: "#475569", fontWeight: 600, textTransform: "uppercase" as const }}>GP</span>
+          </div>
+          <div style={{ display: "grid", gap: 4 }}>
+            {filteredFa.map((p, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 8, padding: "10px 14px", borderRadius: 8, background: "#1e293b", border: "1px solid #334155" }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontWeight: 600, fontSize: 14, color: TEXT, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" }}>{p.name}</div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 3, flexWrap: "wrap" as const }}>
+                    <span style={{ fontSize: 11, color: DIM }}>{p.club}</span>
+                    {p.positions.map(pos => (
+                      <span key={pos} style={{ fontSize: 10, fontWeight: 700, padding: "1px 6px", borderRadius: 99, background: POS_COLOR[pos] ?? "#475569", color: "#fff" }}>{pos}</span>
+                    ))}
+                  </div>
+                </div>
+                <div style={{ width: 50, textAlign: "right" as const, flexShrink: 0 }}>
+                  <span style={{ fontSize: 15, fontWeight: 700, color: TEXT }}>{p.avg}</span>
+                </div>
+                <div style={{ width: 36, textAlign: "right" as const, flexShrink: 0 }}>
+                  <span style={{ fontSize: 13, color: MUTED }}>{p.gp}</span>
+                </div>
+              </div>
+            ))}
+            {filteredFa.length === 0 && <div style={{ padding: 40, textAlign: "center", color: DIM, fontSize: 14 }}>No free agents found</div>}
+          </div>
+        </div>
+      )}
+
+      {/* ── MY LIST ── */}
+      {sub === "mylist" && (
+        <div>
+          <div style={{ display: "flex", alignItems: "center", gap: 12, marginBottom: 16, padding: "10px 14px", background: "#f8fafc", borderRadius: 10, border: "1px solid #e2e8f0" }}>
+            <div style={{ flex: 1 }}>
+              <span style={{ fontSize: 14, fontWeight: 700, color: "#1e293b" }}>{MY_ROSTER.length}/46</span>
+              <span style={{ fontSize: 13, color: "#64748b" }}> players</span>
+              {ltilCount > 0 && (
+                <span style={{ marginLeft: 10, fontSize: 12, fontWeight: 700, background: "#fffbeb", color: "#d97706", border: "1px solid #fcd34d", borderRadius: 99, padding: "2px 9px" }}>
+                  +{ltilCount} LTI slot
+                </span>
+              )}
+            </div>
+            <div style={{ fontSize: 12, color: "#94a3b8" }}>
+              {MY_ROSTER.filter(p => !p.designation).length} active · {ltilCount} LTIL
+            </div>
+          </div>
+          <div style={{ display: "grid", gap: 4 }}>
+            {[...MY_ROSTER].sort((a, b) => {
+              const posOrder = ["DEF","KPD","MID","RUCK","FWD","KPF"];
+              const pa = posOrder.indexOf(a.positions[0] ?? "");
+              const pb = posOrder.indexOf(b.positions[0] ?? "");
+              return (pa === -1 ? 99 : pa) - (pb === -1 ? 99 : pb) || a.name.localeCompare(b.name);
+            }).map((p, i) => (
+              <div key={i} style={{ display: "flex", alignItems: "center", gap: 10, padding: "10px 14px", borderRadius: 8, background: "#fff", border: p.designation === "ltil" ? "1px solid #fcd34d" : "1px solid #e2e8f0" }}>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6 }}>
+                    <span style={{ fontWeight: 600, fontSize: 14, color: "#1e293b" }}>{p.name}</span>
+                    {p.designation === "ltil" && <span style={{ fontSize: 10, fontWeight: 700, background: "#fef3c7", color: "#d97706", border: "1px solid #fcd34d", borderRadius: 99, padding: "1px 7px" }}>LTIL</span>}
+                  </div>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginTop: 3 }}>
+                    <span style={{ fontSize: 11, color: "#64748b" }}>{p.club}</span>
+                    {p.positions.map(pos => (
+                      <span key={pos} style={{ fontSize: 10, fontWeight: 700, padding: "1px 5px", borderRadius: 99, background: POS_COLOR[pos] ?? "#475569", color: "#fff" }}>{pos}</span>
+                    ))}
+                  </div>
+                </div>
+                <div style={{ textAlign: "right" as const, flexShrink: 0 }}>
+                  <div style={{ fontSize: 14, fontWeight: 700, color: "#1e293b" }}>{p.avg}</div>
+                  <div style={{ fontSize: 10, color: "#94a3b8" }}>avg</div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+    </div>
+  );
+}
+
 // ─── MAIN ─────────────────────────────────────────────────────────────────────
 
 const TABS = [
   { key: "home",    label: "Home" },
   { key: "matches", label: "Matches" },
   { key: "wire",    label: "Wire" },
+  { key: "trades",  label: "Trades" },
+  { key: "draft",   label: "Draft Hub" },
   { key: "hq",      label: "League HQ" },
 ] as const;
 
@@ -742,6 +1312,8 @@ export default function DemoLeague() {
         {tab === "home"    && <HomeTab />}
         {tab === "matches" && <MatchesTab />}
         {tab === "wire"    && <WireTab />}
+        {tab === "trades"  && <TradeCentreTab />}
+        {tab === "draft"   && <DraftHubTab />}
         {tab === "hq"      && <LeagueHQTab />}
       </div>
 
